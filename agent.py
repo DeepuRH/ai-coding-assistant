@@ -1,10 +1,7 @@
-import os
+import streamlit as st
 import requests
-from dotenv import load_dotenv
 
-load_dotenv()
-
-API_KEY = os.getenv("OPENROUTER_API_KEY")
+API_KEY = st.secrets["OPENROUTER_API_KEY"]
 
 SYSTEM_PROMPT = """
 You are an elite AI coding assistant.
@@ -21,6 +18,7 @@ Responsibilities:
 chat_history = [
     {"role": "system", "content": SYSTEM_PROMPT}
 ]
+
 
 def coding_agent(user_input, file_content=""):
 
@@ -51,15 +49,10 @@ Uploaded Code:
 
     result = response.json()
 
-    # --- THE FIX STARTS HERE ---
-    # We check if the API actually sent a valid response back
     if "choices" in result:
         reply = result["choices"][0]["message"]["content"]
     else:
-        # If something went wrong (like a bad API key), it catches the error safely
-        print("API Error Response:", result) 
-        reply = f"API Error: The AI model did not return a standard response. Details: {result}"
-    # --- THE FIX ENDS HERE ---
+        reply = f"API Error: {result}"
 
     chat_history.append({
         "role": "assistant",
@@ -67,4 +60,3 @@ Uploaded Code:
     })
 
     return reply
-
