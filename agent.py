@@ -51,7 +51,15 @@ Uploaded Code:
 
     result = response.json()
 
-    reply = result["choices"][0]["message"]["content"]
+    # --- THE FIX STARTS HERE ---
+    # We check if the API actually sent a valid response back
+    if "choices" in result:
+        reply = result["choices"][0]["message"]["content"]
+    else:
+        # If something went wrong (like a bad API key), it catches the error safely
+        print("API Error Response:", result) 
+        reply = f"API Error: The AI model did not return a standard response. Details: {result}"
+    # --- THE FIX ENDS HERE ---
 
     chat_history.append({
         "role": "assistant",
@@ -59,3 +67,4 @@ Uploaded Code:
     })
 
     return reply
+
