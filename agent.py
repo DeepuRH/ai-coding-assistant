@@ -1,7 +1,5 @@
-import streamlit as st
 import requests
-
-API_KEY = st.secrets["OPENROUTER_API_KEY"]
+import streamlit as st
 
 SYSTEM_PROMPT = """
 You are an elite AI coding assistant.
@@ -16,7 +14,10 @@ Responsibilities:
 """
 
 chat_history = [
-    {"role": "system", "content": SYSTEM_PROMPT}
+    {
+        "role": "system",
+        "content": SYSTEM_PROMPT
+    }
 ]
 
 
@@ -38,8 +39,8 @@ Uploaded Code:
     response = requests.post(
         url="https://openrouter.ai/api/v1/chat/completions",
         headers={
-            "Authorization": f"Bearer {API_KEY}",
-            "Content-Type": "application/json"
+            "authorization": st.secrets["auth_token"],
+            "content-type": "application/json"
         },
         json={
             "model": "baidu/cobuddy:free",
@@ -47,12 +48,16 @@ Uploaded Code:
         }
     )
 
+    print("Status Code:", response.status_code)
+    print("Raw Response:", response.text)
+
     result = response.json()
 
     if "choices" in result:
         reply = result["choices"][0]["message"]["content"]
     else:
-        reply = f"API Error: {result}"
+        print("API Error Response:", result)
+        reply = f"❌ API Error: {result}"
 
     chat_history.append({
         "role": "assistant",
