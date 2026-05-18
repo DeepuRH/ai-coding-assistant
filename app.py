@@ -1,62 +1,86 @@
 import streamlit as st
-import requests
+from agent import coding_agent
+from utils import run_code
 
-API_KEY = st.secrets["OPENROUTER_API_KEY"]
+st.set_page_config(
+    page_title="AI Coding Assistant",
+    page_icon="🤖",
+    layout="wide"
+)
 
-SYSTEM_PROMPT = """
-You are an elite AI coding assistant.
+# ---------- HEADER ----------
+st.markdown(
+    "<h1 style='text-align:center;'>🤖 AI Coding Assistant Pro</h1>",
+    unsafe_allow_html=True
+)
 
-Responsibilities:
-- Explain Python code clearly
-- Fix bugs step-by-step
-- Optimize code
-- Review uploaded files
-- Suggest best practices
-- Teach beginners simply
-"""
+st.markdown("---")
 
-chat_history = [
-    {"role": "system", "content": SYSTEM_PROMPT}
-]
+# ---------- LEFT + RIGHT LAYOUT ----------
+col1, col2 = st.columns([2, 1])
 
+# ---------- LEFT SIDE (CHAT) ----------
+with col1:
 
-def coding_agent(user_input, file_content=""):
+    st.subheader("💬 Chat")
 
-    full_prompt = f"""
-User Question:
-{user_input}
+    if "messages" not in st.session_state:
+        st.session_state.messages = []
 
-Uploaded Code:
-{file_content}
-"""
+    for msg in st.session_state.messages:
+        with st.chat_message(msg["role"]):
+            st.write(msg["content"])
 
-    chat_history.append({
-        "role": "user",
-        "content": full_prompt
-    })
+    user_input = st.chat_input("Ask anything about code...")
 
-    response = requests.post(
-        url="https://openrouter.ai/api/v1/chat/completions",
-        headers={
-            "Authorization": f"Bearer {API_KEY}",
-            "Content-Type": "application/json"
-        },
-        json={
-            "model": "baidu/cobuddy:free",
-            "messages": chat_history
-        }
+    if user_input:
+
+        st.session_state.messages.append(
+            {"role": "user", "content": user_input}
+        )
+
+        with st.chat_message("assistant"):
+            with st.spinner("Thinking..."):
+                response = coding_agent(user_input)
+
+        st.session_state.messages.append(
+            {"role": "assistant", "content": response}
+        )
+
+        st.rerun()
+
+# ---------- RIGHT SIDE (TOOLS) ----------
+with col2:
+
+    st.subheader("🛠 Tools")
+
+    uploaded_file = st.file_uploader(
+        "Upload Python file",
+        type=["py"]
     )
 
-    result = response.json()
+    file_content = ""
 
-    if "choices" in result:
-        reply = result["choices"][0]["message"]["content"]
-    else:
-        reply = f"API Error: {result}"
+    if uploaded_file:
 
-    chat_history.append({
-        "role": "assistant",
-        "content": reply
-    })
+        file_content = uploaded_file.read().decode("utf-8")
 
-    return reply
+        st.success("✅ File loaded!")
+
+        st.code(file_content, language="python")
+
+        if st.button("🤖 Explain Code"):
+
+            result = coding_agent(
+                "Explain this code",
+                file_content
+            )
+
+            st.info(result)
+
+        if st.button("▶ Run Code"):
+            result = run_code(file_content)
+            st.success(result)
+
+st.markdown("---")
+st.caption("Made with ❤️ using Streamlit + OpenRouter")
