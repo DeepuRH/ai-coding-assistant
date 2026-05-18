@@ -1,6 +1,12 @@
 import streamlit as st
 from agent import coding_agent
 from utils import run_code
+import streamlit as st
+
+st.write("Secrets loaded:", "auth_token" in st.secrets)
+
+if "auth_token" in st.secrets:
+    st.write("Preview:", st.secrets["auth_token"][:20])
 
 st.set_page_config(
     page_title="AI Coding Assistant",
