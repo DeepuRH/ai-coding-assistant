@@ -36,6 +36,9 @@ Uploaded Code:
         "content": full_prompt
     })
 
+print("Auth header exists:", bool(st.secrets.get("auth_token")))
+print("Auth preview:", st.secrets["auth_token"][:20])
+
     response = requests.post(
         url="https://openrouter.ai/api/v1/chat/completions",
         headers={
